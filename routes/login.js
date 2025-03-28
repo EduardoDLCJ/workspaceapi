@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
           token // Enviar el token en la respuesta
         });
       } else {
-        res.status(402).send({ message: 'Contraseña incorrecta' });
+        res.status(201).send({ message: 'Contraseña incorrecta' });
       }
     } else {
       res.status(404).send({ message: 'Usuario no encontrado' });
