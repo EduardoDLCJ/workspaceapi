@@ -15,6 +15,18 @@ router.post('/', async (req, res) => {
   console.log(`Contraseña cifrada: ${passwordCifrado}`);
 
   try {
+    // Verificar si el correo o el teléfono ya están registrados
+    const usuarioExistente = await User.findOne({
+      $or: [{ correo }, { telefono }]
+    });
+
+    if (usuarioExistente) {
+      return res.status(400).send({
+        message: 'El correo o el teléfono ya están registrados',
+        error: 'DUPLICATE_FIELDS'
+      });
+    }
+
     const nuevoUsuario = new User({
       nombre,
       apellido,
