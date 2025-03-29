@@ -11,6 +11,7 @@ const login = require('./routes/login');
 const respaldos = require('./routes/respaldos/respaldos');
 const usuarios = require('./routes/usuarios');
 const entornos = require('./routes/entorno');
+const recuperar = require('./routes/recuperar/recuperar');
 
 
 console.log("Mongo URI:", process.env.MONGODB_URI);
@@ -28,6 +29,7 @@ app.use('/login', login);
 app.use('/collections', respaldos);
 app.use('/usuarios', usuarios);
 app.use('/entornos', entornos);
+app.use('/recuperar', recuperar);
 
 
 // Iniciar servidor

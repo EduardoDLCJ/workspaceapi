@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Usuario = require('../models/user'); // Asegúrate de que el modelo Usuario esté en esta ruta
 const verifyToken = require('../middlewares/verifyToken');
+const {cifrarVigenere} = require('../middlewares/vigenere'); // Asegúrate de que el cifrado Vigenere esté en esta ruta
+
+
 // Endpoint para obtener todos los usuarios
 router.get('/', verifyToken, async (req, res) => {
     try {
@@ -13,16 +16,34 @@ router.get('/', verifyToken, async (req, res) => {
 });
 
 // Endpoint para editar un usuario por ID
-router.put('/:id',verifyToken, async (req, res) => {
+router.put('/:id', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
-        const updatedUsuario = await Usuario.findByIdAndUpdate(id, req.body, { new: true }); // Actualiza el usuario
-        if (!updatedUsuario) {
+        let { pass, ...otrosCampos } = req.body;
+
+        // Buscar el usuario antes de actualizar
+        const existingUsuario = await Usuario.findById(id);
+        if (!existingUsuario) {
             return res.status(404).json({ message: 'Usuario no encontrado' });
         }
-        res.status(200).json(updatedUsuario); // Devuelve el usuario actualizado
+
+        // Si la contraseña cambia, cifrarla antes de actualizar
+        if (pass && pass !== existingUsuario.pass) {
+            pass = cifrarVigenere(pass, 'TILININSANO'); // Usa una clave segura
+        } else {
+            pass = existingUsuario.pass; // Mantener la contraseña sin cambios
+        }
+
+        // Actualizar usuario con los nuevos datos
+        const updatedUsuario = await Usuario.findByIdAndUpdate(
+            id,
+            { ...otrosCampos, pass },
+            { new: true }
+        );
+
+        res.status(200).json(updatedUsuario);
     } catch (error) {
-        res.status(500).json({ message: 'Error al editar el usuario', error });
+        res.status(500).json({ message: 'Error al editar el usuario', error: error.message });
     }
 });
 
