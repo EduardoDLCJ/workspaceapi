@@ -40,7 +40,7 @@ router.post("/", async (req, res) => {
     const token = jwt.sign({ email: correo }, SECRET_KEY, { expiresIn: "10m" });
 
     // Link de recuperación de contraseña
-    const resetLink = `http://localhost:5173/recuperar?token=${token}`;
+    const resetLink = `https://workspaceapp-chi.vercel.app/recuperar?token=${token}`;
 
     // Configuración del correo con HTML y botón
     const mailOptions = {
