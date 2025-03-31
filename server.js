@@ -16,6 +16,7 @@ const entornos = require('./routes/entorno');
 const recuperar = require('./routes/recuperar/recuperar');
 
 // CORS para permitir solo un origen específico
+{/*
 const allowedOrigin = 'https://workspace2-two.vercel.app';
 app.use(cors({
   origin: (origin, callback) => {
@@ -26,6 +27,7 @@ app.use(cors({
     }
   }
 }));
+*/}
 
 // Aplicar Content Security Policy con Helmet
 app.use(helmet({
