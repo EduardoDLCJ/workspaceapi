@@ -4,6 +4,8 @@ const jwt = require("jsonwebtoken");
 const router = express.Router();
 const User = require('../../models/user'); // Asegúrate de que la ruta sea correcta según tu estructura de carpetas
 const { cifrarVigenere } = require('../../middlewares/vigenere'); // Importa el módulo de Vigenere
+const Token = require("../../models/token"); 
+const mongoose = require("mongoose");
 
 const app = express();
 app.use(express.json());
@@ -40,7 +42,7 @@ router.post("/", async (req, res) => {
     const token = jwt.sign({ email: correo }, SECRET_KEY, { expiresIn: "10m" });
 
     // Link de recuperación de contraseña
-    const resetLink = `https://workspaceapp-chi.vercel.app/recuperar?token=${token}`;
+    const resetLink = `https://workspace2-two.vercel.app/recuperar?token=${token}`;
 
     // Configuración del correo con HTML y botón
     const mailOptions = {
@@ -77,56 +79,63 @@ router.post("/", async (req, res) => {
 });
 
 router.post("/reset-password", async (req, res) => {
-    try {
-      const { token, nuevaContrasena } = req.body;
-      console.log("Datos del reset =", req.body);
-  
-      // Verificar si los campos existen
-      if (!token || !nuevaContrasena) {
-        return res.status(400).json({ error: "Todos los campos son obligatorios" });
-      }
-  
-      // Verificar y decodificar el token
-      let decoded;
-      try {
-        decoded = jwt.verify(token, SECRET_KEY);
-        console.log("Token decodificado:", decoded);
-      } catch (error) {
-        console.error("Error al verificar el token:", error);
-        return res.status(400).json({ error: "Token inválido o expirado" });
-      }
-  
-      const correo = decoded.email;
-      console.log("Correo decodificado:", correo);
-  
-      // Buscar el usuario en la base de datos
-      const usuario = await User.findOne({ correo });
-      console.log("Usuario encontrado:", usuario);
-  
-      if (!usuario) {
-        return res.status(404).json({ error: "Usuario no encontrado" });
-      }
-  
-      // Encriptar la nueva contraseña usando Vigenere
-      const clave = "TILININSANO"; // Asegúrate de usar una clave segura
-      const passwordCifrado = cifrarVigenere(nuevaContrasena, clave);
-      console.log("Contraseña cifrada:", passwordCifrado);
-  
-      if (!passwordCifrado) {
-        return res.status(500).json({ error: "Error al cifrar la contraseña" });
-      }
-  
-      // Actualizar la contraseña en la BD
-      usuario.pass = passwordCifrado;
-      await usuario.save();
-      console.log("Contraseña guardada correctamente en la BD");
-  
-      res.json({ success: true, message: "Contraseña actualizada correctamente" });
-    } catch (error) {
-      console.error("Error al restablecer la contraseña:", error);
-      res.status(500).json({ error: "Error interno del servidor" });
+  try {
+    const { token, nuevaContrasena, cerrarSesion } = req.body;
+    console.log("Datos del reset =", req.body);
+
+    // Verificar si los campos existen
+    if (!token || !nuevaContrasena) {
+      return res.status(400).json({ error: "Todos los campos son obligatorios" });
     }
-  });
+
+    // Verificar y decodificar el token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, SECRET_KEY);
+      console.log("Token decodificado:", decoded);
+    } catch (error) {
+      console.error("Error al verificar el token:", error);
+      return res.status(400).json({ error: "Token inválido o expirado" });
+    }
+
+    const correo = decoded.email;
+    console.log("Correo decodificado:", correo);
+
+    // Buscar el usuario en la base de datos
+    const usuario = await User.findOne({ correo });
+    console.log("Usuario encontrado:", usuario);
+
+    if (!usuario) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    // Encriptar la nueva contraseña usando Vigenere
+    const clave = "TILININSANO"; // Asegúrate de usar una clave segura
+    const passwordCifrado = cifrarVigenere(nuevaContrasena, clave);
+    console.log("Contraseña cifrada:", passwordCifrado);
+
+    if (!passwordCifrado) {
+      return res.status(500).json({ error: "Error al cifrar la contraseña" });
+    }
+
+    // Actualizar la contraseña en la BD
+    usuario.pass = passwordCifrado;
+    await usuario.save();
+    console.log("Contraseña guardada correctamente en la BD");
+
+    // Si `cerrarSesion` es true, eliminar los tokens del usuario
+    if (cerrarSesion) {
+      const userId = new mongoose.Types.ObjectId(usuario._id);
+      await Token.deleteMany({ userId });
+      console.log("Tokens eliminados correctamente");
+    }
+
+    res.json({ success: true, message: "Contraseña actualizada correctamente" });
+  } catch (error) {
+    console.error("Error al restablecer la contraseña:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
 
 router.post("/verify-token", async (req, res) => {
     try {

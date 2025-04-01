@@ -57,7 +57,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Endpoint para obtener entornos por el ObjectId de un usuario
-router.get('/usuario/:Usuario_idUsuario', verifyToken, async (req, res) => {
+router.get('/usuario/:Usuario_idUsuario',  async (req, res) => {
     try {
         const { Usuario_idUsuario } = req.params;
 
